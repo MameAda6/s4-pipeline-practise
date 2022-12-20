@@ -70,6 +70,7 @@ options {
                 ls 
 		ls
                 pwd
+		uname -r
                 '''
             }
         }
