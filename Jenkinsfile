@@ -1,5 +1,3 @@
-
-
 pipeline {
     agent {
      label ("node1 || node2 ||  node3 || node4 ||  node5 ||  branch ||  main ||  jenkins-node || docker-agent ||  jenkins-docker2 ||  preproduction ||  production")
@@ -20,41 +18,41 @@ options {
                         parameters([    
                         
                         choice(
-                            choices: ['Dev', 'Sanbox','Prod'], 
+                            choices: ['DEV', 'SANBOX','PROD'], 
                             name: 'Environment'   
                                 ),
 
                           string(
                             defaultValue: 's4user',
-                            name: 'User',
+                            name: 'USER',
 			                description: 'Required to enter your name',
                             trim: true
                             ),
 
                           string(
-                            defaultValue: 'eric-001',
-                            name: 'DB-Tag',
+                            defaultValue: 'v1.0.0',
+                            name: 'DBTag',
 			                description: 'Required to enter the image tag',
                             trim: true
                             ),
 
                           string(
-                            defaultValue: 'eric-001',
-                            name: 'UI-Tag',
+                            defaultValue: 'v1.0.0',
+                            name: 'UITag',
 			                description: 'Required to enter the image tag',
                             trim: true
                             ),
 
                           string(
-                            defaultValue: 'eric-001',
-                            name: 'WEATHER-Tag',
+                            defaultValue: 'v1.0.0',
+                            name: 'WEATHERTag',
 			                description: 'Required to enter the image tag',
                             trim: true
                             ),
 
                           string(
-                            defaultValue: 'eric-001',
-                            name: 'AUTH-Tag',
+                            defaultValue: 'v1.0.0',
+                            name: 'AUTHTag',
 			                description: 'Required to enter the image tag',
                             trim: true
                             ),
@@ -64,44 +62,180 @@ options {
             }
         }
  
-        
-		stage('permission') {
+stage('permission') {
             steps {
                 sh '''
-cat <<EOF > check.sh
-#! /bin/bash 
-USER=${User}
-cat permission.txt | grep -i $USER
-if 
-[[ $? -eq 0 ]]
-then 
-echo "You have permission to run this job"
-else 
-echo "You DON'T have permission to run this job"
-exit 1
-fi 
-EOF
-bash check.sh
+cat permission.txt | grep -o $USER
+echo $?
+
                 '''
             }
         }
+	    
+        stage('cleaning') {
+            steps {
+                sh '''
                 ls 
-		ls
-                pwd
-		uname -r
                 '''
             }
         }
+
+    stage('SonarQube analysis') {
+            agent {
+                docker {
+                  image 'sonarsource/sonar-scanner-cli:4.7.0'
+                }
+               }
+               environment {
+        CI = 'true'
+        //  scannerHome = tool 'Sonar'
+        scannerHome='/opt/sonar-scanner'
+    }
+            steps{
+                withSonarQubeEnv('Sonar') {
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
+
+        stage('build-dev') {
+            steps {
+                sh '''
+cd UI
+docker build -t devopseasylearning2021/s4-ui:$UITag .
+cd -
+cd DB
+docker build -t devopseasylearning2021/s4-db:$DBTag .
+cd -
+cd auth 
+docker build -t devopseasylearning2021/s4-auth:$AUTHTag .
+cd -
+cd weather 
+docker build -t devopseasylearning2021/s4-weather:$WEATHERTag .
+cd -
+                '''
+            }
+        }
+
+        stage('build-sanbox') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+
+        stage('build-prod') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('login') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('push-to-dockerhub-dev') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('push-to-dockerhub-sanbox') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('push-to-dockerhub-prod') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('update helm charts-dev') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('update helm charts-sanbox') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('update helm charts-prod') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+        stage('wait for argocd') {
+            steps {
+                sh '''
+                ls 
+                pwd
+                '''
+            }
+        }
+
+
+        
     }
 	
-	post {
-    
-    success {
-      slackSend (channel: '#development-alerts', color: 'good', message: "Images  have been pushed to Nexus")
+	
+	
+   post {
+   
+   success {
+      slackSend (channel: '#development-alerts', color: 'good', message: "SUCCESSFUL: Application S4-EKTSS  Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    }
+
+ 
+    unstable {
+      slackSend (channel: '#development-alerts', color: 'warning', message: "UNSTABLE: Application S4-EKTSS  Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
     }
 
     failure {
-      slackSend (channel: '#development-alerts', color: '#FF0000', message: "FAILURE: Images  have NOT been pushed to Nexus")
+      slackSend (channel: '#development-alerts', color: '#FF0000', message: "FAILURE: Application S4-EKTSS Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    }
+   
+    cleanup {
+      deleteDir()
     }
 }
+
+
+	
 }
+
+
