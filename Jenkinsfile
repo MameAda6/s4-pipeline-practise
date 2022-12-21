@@ -3,6 +3,10 @@ pipeline {
      label ("node1 || node2 ||  node3 || node4 ||  node5 ||  branch ||  main ||  jenkins-node || docker-agent ||  jenkins-docker2 ||  preproduction ||  production")
             }
 
+  environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
+
 options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
     disableConcurrentBuilds()
@@ -171,35 +175,52 @@ cd -
         stage('login') {
             steps {
                 sh '''
-                ls 
-                pwd
+echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u devopseasylearning2021 --password-stdin
                 '''
             }
         }
 
         stage('push-to-dockerhub-dev') {
+          when{ 
+              expression {
+                env.Environment == 'DEV' }
+                }
             steps {
                 sh '''
-                ls 
-                pwd
+docker push devopseasylearning2021/s4-ui:${BUILD_NUMBER}$UITag 
+docker push devopseasylearning2021/s4-db:${BUILD_NUMBER}$DBTag 
+docker push devopseasylearning2021/s4-auth:${BUILD_NUMBER}$AUTHTag 
+docker push devopseasylearning2021/s4-weather:${BUILD_NUMBER}$WEATHERTag 
                 '''
             }
         }
 
         stage('push-to-dockerhub-sanbox') {
+          when{ 
+              expression {
+                env.Environment == 'SANBOX' }
+                }
             steps {
                 sh '''
-                ls 
-                pwd
+docker push devopseasylearning2021/s4-ui:${BUILD_NUMBER}$UITag 
+docker push devopseasylearning2021/s4-db:${BUILD_NUMBER}$DBTag 
+docker push devopseasylearning2021/s4-auth:${BUILD_NUMBER}$AUTHTag 
+docker push devopseasylearning2021/s4-weather:${BUILD_NUMBER}$WEATHERTag 
                 '''
             }
         }
 
         stage('push-to-dockerhub-prod') {
+          when{ 
+              expression {
+                env.Environment == 'PROD' }
+                }
             steps {
                 sh '''
-                ls 
-                pwd
+docker push devopseasylearning2021/s4-ui:${BUILD_NUMBER}$UITag 
+docker push devopseasylearning2021/s4-db:${BUILD_NUMBER}$DBTag 
+docker push devopseasylearning2021/s4-auth:${BUILD_NUMBER}$AUTHTag 
+docker push devopseasylearning2021/s4-weather:${BUILD_NUMBER}$WEATHERTag 
                 '''
             }
         }
