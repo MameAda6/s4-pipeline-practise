@@ -330,8 +330,8 @@ EOF
 	          ]) {
 
 	            sh '''
-                 git config --global user.name "devopseasylearning"
-                 git config --global user.email info@devopseasylearning.com
+                 git config --global user.name "MameAda6"
+                 git config --global user.email oulishupa@gmail.com
                 rm -rf s4-pipeline-practise || true
                 git clone  https://devopseasylearning:$TOKEN@github.com/devopseasylearning/s4-pipeline-practise.git
                 cd s4-pipeline-practise/CHARTS
